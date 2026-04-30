@@ -27,17 +27,17 @@ from scripts.build_index import build_idx
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Check if index needs building
+    # Check if index exists (we now pre-index locally and push to GitHub)
     try:
         client = make_client()
         collection = ensure_collection(client)
-        if collection.count() == 0:
-            print("ChromaDB collection is empty. Building index...")
-            build_idx()
+        count = collection.count()
+        if count == 0:
+            print("WARNING: ChromaDB collection is empty. Did you push 'chroma_storage' to GitHub?")
         else:
-            print(f"ChromaDB collection already has {collection.count()} documents.")
+            print(f"ChromaDB collection loaded with {count} documents.")
     except Exception as e:
-        print(f"Error checking/building index: {e}")
+        print(f"Error checking index: {e}")
     yield
 
 app = FastAPI(
@@ -49,8 +49,8 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "*"],
-    allow_credentials=False,
+    allow_origin_regex=r"https://.*\.vercel\.app|http://localhost:5173|http://127\.0\.0\.1:5173",
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
