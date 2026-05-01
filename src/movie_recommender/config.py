@@ -20,6 +20,14 @@ class Settings(BaseSettings):
     app_host: str = Field("0.0.0.0")
     app_port: int = Field(8000)
     app_reload: bool = Field(True)
+    frontend_origins: str = Field(
+        "http://localhost:5173,http://127.0.0.1:5173",
+        alias="FRONTEND_ORIGINS",
+    )
+    frontend_origin_regex: str = Field(
+        r"^https://.*\.vercel\.app$",
+        alias="FRONTEND_ORIGIN_REGEX",
+    )
 
     chroma_collection_name: str = Field("movies")
     ollama_base_url: str = Field("http://localhost:11434")
@@ -115,6 +123,15 @@ class Settings(BaseSettings):
     @property
     def effective_tmdb_bearer_token(self) -> str:
         return self.tmdb_bearer_token or self.vite_tmdb_api_key
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def cors_allowed_origins(self) -> list[str]:
+        return [
+            origin.strip()
+            for origin in self.frontend_origins.split(",")
+            if origin.strip()
+        ]
 
 
 @lru_cache(maxsize=1)
