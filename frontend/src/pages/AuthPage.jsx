@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { authFetch, clearStoredAuth, getStoredAuth, readApiResponse, setStoredAuth } from "../lib/auth";
+import { authFetch, clearStoredAuth, getApiErrorMessage, getStoredAuth, readApiResponse, setStoredAuth } from "../lib/auth";
 
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
@@ -103,6 +103,11 @@ export default function AuthPage({ mode = "login" }) {
       return;
     }
 
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
     setLoading(true);
     try {
       const endpoint = isSignup ? `${API_BASE}/auth/signup` : `${API_BASE}/auth/login`;
@@ -118,7 +123,7 @@ export default function AuthPage({ mode = "login" }) {
 
       const { data, isJson } = await readApiResponse(res, "Authentication failed.");
       if (!res.ok) {
-        throw new Error(data?.detail || "Authentication failed.");
+        throw new Error(getApiErrorMessage(data, "Authentication failed."));
       }
       if (!isJson || !data?.token) {
         throw new Error("Authentication API returned an unexpected response.");

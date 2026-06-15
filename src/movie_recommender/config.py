@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     app_port: int = Field(8000)
     app_reload: bool = Field(True)
     frontend_origins: str = Field(
-        "http://localhost:5173,http://127.0.0.1:5173",
+        "http://localhost:5173,http://127.0.0.1:5173,https://movie-recommendation-ai-seven.vercel.app",
         alias="FRONTEND_ORIGINS",
     )
     frontend_origin_regex: str = Field(
