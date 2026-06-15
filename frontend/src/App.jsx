@@ -409,19 +409,26 @@ export default function App() {
         if (cancelled) return;
         setAuthUser(me);
 
-        const profileResponse = await authFetch(`${API_BASE}/profile`);
-        if (!profileResponse.ok) {
+        try {
+          const profileResponse = await authFetch(`${API_BASE}/profile`);
+          if (!profileResponse.ok) {
+            if (!cancelled) {
+              setProfile({ user: me });
+              setAuthReady(true);
+            }
+            return;
+          }
+
+          const profileData = await profileResponse.json();
+          if (!cancelled) {
+            setProfile({ ...profileData, user: me });
+            setAuthReady(true);
+          }
+        } catch {
           if (!cancelled) {
             setProfile({ user: me });
             setAuthReady(true);
           }
-          return;
-        }
-
-        const profileData = await profileResponse.json();
-        if (!cancelled) {
-          setProfile({ ...profileData, user: me });
-          setAuthReady(true);
         }
       })
       .catch(() => {

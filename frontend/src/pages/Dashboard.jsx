@@ -382,33 +382,30 @@ export default function Dashboard() {
           authFetch(`${API_BASE}/history?limit=20`),
         ]);
 
-        if (!profileResponse.ok) {
-          throw new Error("Could not load profile.");
-        }
-
-        const profileData = await profileResponse.json();
-        const historyData = await historyResponse.json();
-
-        if (!historyResponse.ok) {
-          throw new Error(historyData?.detail || "Could not load AI history.");
-        }
+        const profileData = profileResponse.ok
+          ? await profileResponse.json()
+          : null;
+        const historyData = historyResponse.ok
+          ? await historyResponse.json()
+          : [];
 
         if (!cancelled) {
-          setProfile(profileData);
-          setHistory(historyData);
+          setProfile(profileData || {});
+          setHistory(Array.isArray(historyData) ? historyData : []);
+          setHistoryError(
+            historyResponse.ok ? null : "Could not load AI history yet.",
+          );
           setDashboardReady(true);
           setHistoryLoading(false);
         }
       })
-      .catch(() => {
-        clearStoredAuth();
+      .catch((error) => {
         if (!cancelled) {
           setHistoryError(
-            "Could not load your signed-in dashboard. Please log in again.",
+            error?.message || "Could not load your signed-in dashboard.",
           );
           setDashboardReady(true);
           setHistoryLoading(false);
-          navigate("/login", { replace: true });
         }
       });
 

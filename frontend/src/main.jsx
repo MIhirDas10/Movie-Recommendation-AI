@@ -26,16 +26,17 @@ function ProtectedRoute({ children }) {
         if (!cancelled) {
           if (response.ok) {
             setStatus("authed");
-          } else {
+          } else if (response.status === 401 || response.status === 403) {
             clearStoredAuth();
             setStatus("guest");
+          } else {
+            setStatus("authed");
           }
         }
       })
       .catch(() => {
-        clearStoredAuth();
         if (!cancelled) {
-          setStatus("guest");
+          setStatus("authed");
         }
       });
 
