@@ -370,9 +370,20 @@ export default function Dashboard() {
     authFetch(`${API_BASE}/auth/me`)
       .then(async (authResponse) => {
         if (!authResponse.ok) {
-          clearStoredAuth();
+          if (authResponse.status === 401 || authResponse.status === 403) {
+            clearStoredAuth();
+            if (!cancelled) {
+              navigate("/login", { replace: true });
+            }
+            return;
+          }
+
           if (!cancelled) {
-            navigate("/login", { replace: true });
+            setProfile(session.user || {});
+            setHistory([]);
+            setHistoryError("Could not refresh profile data yet.");
+            setDashboardReady(true);
+            setHistoryLoading(false);
           }
           return;
         }

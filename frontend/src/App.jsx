@@ -265,7 +265,7 @@ export default function App() {
   const [searchParams] = useSearchParams();
   const [authSession, setAuthSession] = useState(() => getStoredAuth());
   const [authReady, setAuthReady] = useState(() => !getStoredAuth()?.token);
-  const [authUser, setAuthUser] = useState(null);
+  const [authUser, setAuthUser] = useState(() => getStoredAuth()?.user || null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isAI, setIsAI] = useState(false);
@@ -391,15 +391,25 @@ export default function App() {
     }
 
     setAuthReady(false);
+    setAuthUser(authSession.user || null);
 
     authFetch(`${API_BASE}/auth/me`)
       .then(async (response) => {
         if (!response.ok) {
-          clearStoredAuth();
+          if (response.status === 401 || response.status === 403) {
+            clearStoredAuth();
+            if (!cancelled) {
+              setAuthSession(null);
+              setAuthUser(null);
+              setProfile(null);
+              setAuthReady(true);
+            }
+            return;
+          }
+
           if (!cancelled) {
-            setAuthSession(null);
-            setAuthUser(null);
-            setProfile(null);
+            setAuthUser(authSession.user || null);
+            setProfile({ user: authSession.user || null });
             setAuthReady(true);
           }
           return;
@@ -432,11 +442,9 @@ export default function App() {
         }
       })
       .catch(() => {
-        clearStoredAuth();
         if (!cancelled) {
-          setAuthSession(null);
-          setAuthUser(null);
-          setProfile(null);
+          setAuthUser(authSession.user || null);
+          setProfile({ user: authSession.user || null });
           setAuthReady(true);
         }
       });
