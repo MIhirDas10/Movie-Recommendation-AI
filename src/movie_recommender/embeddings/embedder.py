@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
-from sentence_transformers import SentenceTransformer
+
 from movie_recommender.config import get_settings
 from movie_recommender.logging_config import get_logger
 
@@ -13,6 +13,8 @@ class Embedder:
         self.model_name = model_name or settings.embedding_model
         self.device = device or settings.embedding_device
         log.info(f"loading embedding model '{self.model_name}' on device '{self.device}'")
+
+        from sentence_transformers import SentenceTransformer
 
         self.model = SentenceTransformer(self.model_name, device = self.device) # to generate vector embedding
         self.dimension = self.model.get_sentence_embedding_dimension()

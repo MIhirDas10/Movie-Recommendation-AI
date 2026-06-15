@@ -34,7 +34,7 @@ dependencies = [
     # Storage
     "aiosqlite>=0.20.0",
     "sqlalchemy>=2.0.0",
-    "pymongo>=4.8.0",
+    "pymongo[srv]>=4.8.0",
     "cloudinary>=1.41.0",
 
     # Utilities

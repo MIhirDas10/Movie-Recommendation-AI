@@ -4,9 +4,6 @@ from datetime import datetime, timezone
 from secrets import token_hex
 from typing import Any
 
-from pymongo import DESCENDING, MongoClient
-from pymongo.collection import Collection
-
 from movie_recommender.config import get_settings
 from movie_recommender.db import sqlite_store
 
@@ -178,15 +175,22 @@ class SQLiteStore:
 
 class MongoStore:
     def __init__(self) -> None:
+        from pymongo import MongoClient
+
         settings = get_settings()
-        self.client = MongoClient(settings.mongodb_uri)
+        self.client = MongoClient(
+            settings.mongodb_uri,
+            connectTimeoutMS=5000,
+            serverSelectionTimeoutMS=5000,
+            socketTimeoutMS=10000,
+        )
         self.db = self.client[settings.mongodb_db_name]
-        self.queries: Collection = self.db["queries"]
-        self.profiles: Collection = self.db["profiles"]
-        self.users: Collection = self.db["users"]
+        self.queries: Any = self.db["queries"]
+        self.profiles: Any = self.db["profiles"]
+        self.users: Any = self.db["users"]
 
     def init(self) -> None:
-        self.queries.create_index([("profile_id", DESCENDING), ("created_at", DESCENDING)])
+        self.queries.create_index([("profile_id", -1), ("created_at", -1)])
         self.profiles.create_index("profile_id", unique=True)
         self.users.create_index("user_id", unique=True)
         self.users.create_index("email_lower", unique=True)
@@ -340,9 +344,10 @@ def get_store() -> SQLiteStore | MongoStore:
 
     settings = get_settings()
     if settings.storage_backend.lower() == "mongodb" and settings.mongodb_uri:
-        _store = MongoStore()
+        store = MongoStore()
     else:
-        _store = SQLiteStore()
+        store = SQLiteStore()
 
-    _store.init()
+    store.init()
+    _store = store
     return _store

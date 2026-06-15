@@ -192,6 +192,16 @@ def _extract_bearer_token(authorization: str | None) -> str | None:
     return value.strip()
 
 
+def _get_store_or_503():
+    try:
+        return get_store()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Database is temporarily unavailable. Check the backend database settings.",
+        ) from exc
+
+
 def _get_current_user(authorization: str | None) -> dict[str, Any] | None:
     token = _extract_bearer_token(authorization)
     if not token:
@@ -199,7 +209,7 @@ def _get_current_user(authorization: str | None) -> dict[str, Any] | None:
     user_id = _decode_token(token)
     if not user_id:
         return None
-    return get_store().get_user_by_id(user_id)
+    return _get_store_or_503().get_user_by_id(user_id)
 
 
 def _require_current_user(authorization: str | None) -> dict[str, Any]:
@@ -210,7 +220,7 @@ def _require_current_user(authorization: str | None) -> dict[str, Any]:
 
 
 def _build_personalized_query(query: str, profile_id: str) -> str:
-    history = get_store().get_history(limit=100, offset=0, profile_id=profile_id)
+    history = _get_store_or_503().get_history(limit=100, offset=0, profile_id=profile_id)
     if not history:
         return query
 
@@ -290,7 +300,7 @@ def signup(body: SignupRequest):
     password_hash = _hash_password(body.password, salt)
 
     try:
-        user = get_store().create_user(
+        user = _get_store_or_503().create_user(
             {
                 "displayName": body.displayName,
                 "username": body.username,
@@ -308,7 +318,7 @@ def signup(body: SignupRequest):
 
 @app.post("/auth/login", response_model=AuthResponse, tags=["Auth"])
 def login(body: LoginRequest):
-    user = get_store().get_user_by_identifier(body.identifier)
+    user = _get_store_or_503().get_user_by_identifier(body.identifier)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials.")
 
@@ -329,7 +339,7 @@ def me(authorization: str | None = Header(default=None)):
 @app.get("/profile", tags=["Profile"])
 def get_profile(authorization: str | None = Header(default=None)):
     user = _require_current_user(authorization)
-    return get_store().get_profile(user["user_id"])
+    return _get_store_or_503().get_profile(user["user_id"])
 
 
 @app.put("/profile", tags=["Profile"])
@@ -339,7 +349,7 @@ def update_profile(
 ):
     user = _require_current_user(authorization)
     payload = body.model_dump(exclude_none=True)
-    return get_store().save_profile(payload, profile_id=user["user_id"])
+    return _get_store_or_503().save_profile(payload, profile_id=user["user_id"])
 
 
 @app.post("/profile/upload", tags=["Profile"])
@@ -349,7 +359,7 @@ async def upload_profile_asset(
     authorization: str | None = Header(default=None),
 ):
     user = _require_current_user(authorization)
-    profile = get_store().get_profile(user["user_id"])
+    profile = _get_store_or_503().get_profile(user["user_id"])
 
     file_bytes = await file.read()
     if not file_bytes:
@@ -362,7 +372,7 @@ async def upload_profile_asset(
         existing_public_id=existing_public_id,
         folder=f"movie-man/{target}s",
     )
-    updated = get_store().save_profile({target: asset}, profile_id=user["user_id"])
+    updated = _get_store_or_503().save_profile({target: asset}, profile_id=user["user_id"])
     return {"target": target, "profile": updated}
 
 
@@ -385,7 +395,7 @@ def recommend(
     if not results:
         raise HTTPException(status_code=404, detail="No recommendations found for this query.")
 
-    query_id = get_store().save_query_and_results(body.query, results, profile_id)
+    query_id = _get_store_or_503().save_query_and_results(body.query, results, profile_id)
     return RecommendResponse(
         query_id=query_id,
         query=body.query,
@@ -401,7 +411,7 @@ def list_history(
 ):
     user = _get_current_user(authorization)
     profile_id = user["user_id"] if user else DEFAULT_PROFILE_ID
-    return get_store().get_history(limit=limit, offset=offset, profile_id=profile_id)
+    return _get_store_or_503().get_history(limit=limit, offset=offset, profile_id=profile_id)
 
 
 @app.get("/history/{query_id}", response_model=HistoryItem, tags=["History"])
@@ -411,7 +421,7 @@ def get_single_history(
 ):
     user = _get_current_user(authorization)
     profile_id = user["user_id"] if user else DEFAULT_PROFILE_ID
-    record = get_store().get_query_by_id(query_id, profile_id=profile_id)
+    record = _get_store_or_503().get_query_by_id(query_id, profile_id=profile_id)
     if not record:
         raise HTTPException(status_code=404, detail=f"Query {query_id} not found.")
     return record

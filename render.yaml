@@ -2,7 +2,7 @@ services:
   - type: web
     name: movie-recommender-backend
     runtime: docker
-    plan: free # Use free tier
+    plan: free
     envVars:
       - key: APP_ENV
         value: production
@@ -11,11 +11,11 @@ services:
       - key: STORAGE_BACKEND
         value: mongodb
       - key: MONGODB_URI
-        sync: false # User must provide this in Render dashboard
+        sync: false
       - key: MONGODB_DB_NAME
         value: moviesite
       - key: AUTH_SECRET
-        generateValue: true # Generates a random secret if not provided
+        generateValue: true
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY
