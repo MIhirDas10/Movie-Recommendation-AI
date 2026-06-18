@@ -1,136 +1,195 @@
-# 🎬 Movie Recommendation AI
+# Movie Man
 
-![Movie Man](https://github.com/user-attachments/assets/d3e41f90-23e2-4526-8f40-0b924ce84ce5)
+![Movie Man interface](https://github.com/user-attachments/assets/d3e41f90-23e2-4526-8f40-0b924ce84ce5)
 
-[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
-[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
-[![Vite](https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E)](https://vitejs.dev/)
-[![ChromaDB](https://img.shields.io/badge/ChromaDB-FF6B6B?style=for-the-badge)](https://trychroma.com/)
-[![Ollama](https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white)](https://ollama.ai/)
+Movie Man is a full-stack movie discovery and recommendation application. It combines a React interface, FastAPI authentication and profiles, MovieLens data, ChromaDB semantic search, sentence-transformer embeddings, and optional Ollama reranking.
 
-A production-grade, AI-powered movie recommendation engine. It combines the blazing-fast vector search capabilities of **ChromaDB** with the reasoning power of local LLMs via **Ollama** to deliver hyper-personalized movie suggestions with human-readable explanations.
+[![React](https://img.shields.io/badge/React-19-20232A?logo=react&logoColor=61DAFB)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.111+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![ChromaDB](https://img.shields.io/badge/ChromaDB-vector_search-EF5B5B)](https://www.trychroma.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-profiles-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 
----
+## Features
 
-## 🌟 Key Features
+- Natural-language movie recommendations with semantic vector search
+- Optional Ollama reranking with human-readable recommendation reasons
+- Email or username authentication
+- Persistent profiles, watchlists, and recommendation history
+- Personalized recommendations based on previous searches
+- TMDB-powered discovery, posters, trailers, credits, and genre browsing
+- Avatar and banner uploads through Cloudinary
+- Responsive React dashboard with taste signals and AI history
+- SQLite support for local development and MongoDB support for production
+- Docker, Render, and Vercel deployment configuration
 
-- **Semantic Search**: Understands complex queries like *"mind-bending sci-fi thriller like Inception"*.
-- **AI Reranking & Reasoning**: Uses an LLM to evaluate candidates and explain *why* you'll love them.
-- **Personalization**: Learns from your search history and biases results toward your unique taste.
-- **Local First**: Runs embeddings and LLM inference locally—no expensive API keys needed!
-- **Modern Stack**: Built with FastAPI (Backend) and React/Vite (Frontend).
-
----
-
-## 🏗️ Architecture Overview
-
-For an in-depth breakdown of the system design, data flow, and components, please read the [Architecture Documentation](architecture.md).
-
-### How It Works (High Level)
+## Architecture
 
 ```mermaid
-flowchart TD
-    A[User Query] -->|e.g. animated movie for kids| B[Sentence-Transformer]
-    B -->|Generates Embeddings| C[(ChromaDB Vector Search)]
-    C -->|Top K Candidates| D{Ollama LLaMA}
-    D -->|Reranks and Explains| E[FastAPI]
-    E -->|JSON Response| F[Frontend or User]
+flowchart LR
+    Browser[React + Vite] -->|Auth, profile, history| API[FastAPI]
+    Browser -->|Movie discovery| TMDB[TMDB API]
+    Browser -->|Trending counters| Appwrite[Appwrite]
+
+    API --> Store{Storage backend}
+    Store --> SQLite[(SQLite)]
+    Store --> MongoDB[(MongoDB)]
+
+    API --> Pipeline[Recommendation pipeline]
+    Pipeline --> Embedder[Sentence Transformer]
+    Embedder --> Chroma[(ChromaDB)]
+    Chroma --> Reranker[Ollama reranker]
+    Reranker --> API
+
+    API --> Cloudinary[Cloudinary]
 ```
 
----
+The API deliberately lazy-loads the embedding model and ChromaDB recommendation components. Authentication, profiles, and health checks can therefore run without loading the ML stack into memory.
 
-## 📂 File Structure
+## Technology
+
+| Area | Stack |
+| --- | --- |
+| Frontend | React 19, Vite 6, React Router, Tailwind CSS |
+| API | FastAPI, Pydantic, Uvicorn |
+| Authentication | PBKDF2 password hashing, signed bearer tokens |
+| Recommendation | Sentence Transformers, ChromaDB, optional Ollama |
+| Data | MovieLens, Pandas, NumPy, PyArrow |
+| Persistence | SQLite or MongoDB |
+| Media | TMDB and Cloudinary |
+| Deployment | Docker, Render, Vercel |
+
+## Project Structure
 
 ```text
-movie-recommender-ai/
-├── src/movie_recommender/
-│   ├── config.py               # Pydantic settings — all config in one place
-│   ├── logging_config.py       # Structured logging setup
-│   ├── data/
-│   │   ├── movielens_loader.py # Loads raw CSVs into DataFrames
-│   │   └── preprocess.py       # Cleans, filters, builds text_blob per movie
-│   ├── embeddings/
-│   │   └── embedder.py         # Sentence-transformer wrapper
-│   ├── vector_db/
-│   │   └── chroma_client.py    # ChromaDB client — create, upload, search
-│   ├── llm/
-│   │   └── ollama_client.py    # Ollama API wrapper
-│   ├── recommender/
-│   │   ├── retrieve.py         # Embed query → search ChromaDB → candidates
-│   │   ├── rerank.py           # Send candidates to LLM → ranked + reasons
-│   │   └── pipeline.py         # retrieve → rerank in one function call
-│   ├── db/
-│   │   └── sqlite_store.py     # Persist queries + results to SQLite
-│   └── api/
-│       └── main.py             # FastAPI app — /recommend, /history endpoints
-├── frontend/                   # React + Vite Frontend UI
-├── scripts/
-│   ├── build_index.py          # One-time: embed all movies + upload to ChromaDB
-│   └── download_movielens.py   # One-time: download MovieLens dataset
-├── data/
-│   ├── raw/                    # Extracted MovieLens CSVs (gitignored)
-│   └── processed/              # Parquet + SQLite files (gitignored)
-├── chroma_storage/             # ChromaDB persistence (gitignored)
-├── tests/
-├── pyproject.toml
-└── README.md
+Movie-Recommendation-AI/
+|-- frontend/                         React and Vite application
+|   |-- src/components/               Movie cards, search, modal, spinner
+|   |-- src/pages/                    Authentication, dashboard, genres
+|   |-- src/hooks/                    Recommendation and history hooks
+|   |-- src/lib/                      Authentication helpers
+|   `-- vercel.json                   SPA routing configuration
+|-- src/movie_recommender/
+|   |-- api/main.py                   FastAPI routes and auth
+|   |-- config.py                     Environment-based settings
+|   |-- data/                         MovieLens loading and preprocessing
+|   |-- db/                           SQLite and MongoDB stores
+|   |-- embeddings/                   Sentence-transformer wrapper
+|   |-- recommender/                  Retrieval and reranking pipeline
+|   |-- vector_db/                    ChromaDB utilities
+|   `-- media/                        Cloudinary integration
+|-- scripts/                          Dataset and index utilities
+|-- tests/                            Backend tests
+|-- chroma_storage/                   Prebuilt local vector index
+|-- Dockerfile                        Production backend image
+|-- render.yaml                       Render service blueprint
+`-- pyproject.toml                    Python package and dependencies
 ```
 
----
+## Prerequisites
 
-## 🚀 Quickstart (Local Development)
+- Python 3.10 or newer
+- Node.js 18 or newer
+- npm
+- A TMDB API read-access token
+- Optional: MongoDB Atlas, Cloudinary, Appwrite, and Ollama
 
-### 1. Clone the repo
+## Local Setup
+
+### 1. Clone the repository
 
 ```bash
-git clone https://github.com/DigontaDas/Movie-Recommendation-AI.git
+git clone https://github.com/MIhirDas10/Movie-Recommendation-AI.git
 cd Movie-Recommendation-AI
 ```
 
-### 2. Set up the Backend (FastAPI)
+### 2. Configure the backend
+
+Create a virtual environment and install the project:
 
 ```bash
-# Create and activate virtual environment
 python -m venv .venv
+```
 
-# Windows
-.venv\Scripts\activate
-# Mac / Linux
-source .venv/bin/activate
+Windows PowerShell:
 
-# Install dependencies
+```powershell
+.\.venv\Scripts\Activate.ps1
 pip install -e .
-pip install pydantic-settings structlog chromadb pyarrow
 ```
 
-### 3. Download the MovieLens dataset
-
-Go to [grouplens.org/datasets/movielens](https://grouplens.org/datasets/movielens/) and download **ml-latest-small.zip**. Extract it so your folder looks like this:
-
-```text
-data/raw/ml-latest-small/
-├── movies.csv
-├── ratings.csv
-├── tags.csv
-└── links.csv
-```
-
-### 4. Build the ChromaDB index
+macOS or Linux:
 
 ```bash
-python scripts/build_index.py
+source .venv/bin/activate
+pip install -e .
 ```
 
-### 5. Start the API
+Create `.env` in the repository root:
+
+```dotenv
+APP_ENV=development
+APP_HOST=0.0.0.0
+APP_PORT=8000
+
+STORAGE_BACKEND=sqlite
+AUTH_SECRET=replace-with-a-long-random-secret
+
+ENABLE_OLLAMA=true
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.1:8b
+
+TMDB_API_KEY=your-tmdb-read-access-token
+
+# Optional production services
+MONGODB_URI=
+MONGODB_DB_NAME=moviesite
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+```
+
+Do not commit `.env` or real credentials.
+
+### 3. Prepare recommendation data
+
+The repository includes ChromaDB storage used by the deployed application. To rebuild the data locally:
+
+```bash
+python scripts/download_movielens.py
+python scripts/build_index.py --recreate
+```
+
+The index build downloads or loads MovieLens data, creates sentence-transformer embeddings, and writes them to `chroma_storage/`.
+
+### 4. Run the API
 
 ```bash
 uvicorn movie_recommender.api.main:app --reload
 ```
-Open your browser at **[http://localhost:8000/docs](http://localhost:8000/docs)** to see the interactive Swagger UI.
 
-### 6. Start the Frontend
+Useful endpoints:
 
-Open a new terminal and run:
+- API health: `http://localhost:8000/health`
+- Swagger UI: `http://localhost:8000/docs`
+- OpenAPI schema: `http://localhost:8000/openapi.json`
+
+### 5. Configure and run the frontend
+
+Create `frontend/.env.local`:
+
+```dotenv
+VITE_API_URL=http://localhost:8000
+VITE_TMDB_API_KEY=your-tmdb-read-access-token
+
+# Optional Appwrite trending-search integration
+VITE_APPWRITE_PROJECT_ID=
+VITE_APPWRITE_DATABASE_ID=
+VITE_APPWRITE_COLLECTION_ID=
+```
+
+Then start Vite:
 
 ```bash
 cd frontend
@@ -138,32 +197,141 @@ npm install
 npm run dev
 ```
 
----
+Open `http://localhost:5173`.
 
+## API Overview
 
-### Example API Request
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/health` | Service health check |
+| `POST` | `/auth/signup` | Create an account |
+| `POST` | `/auth/login` | Log in with username or email |
+| `GET` | `/auth/me` | Validate a bearer token |
+| `GET` | `/profile` | Load the current profile |
+| `PUT` | `/profile` | Update profile and watchlist data |
+| `POST` | `/profile/upload` | Upload avatar or banner media |
+| `POST` | `/recommend` | Generate movie recommendations |
+| `GET` | `/history` | List recommendation history |
+| `GET` | `/history/{query_id}` | Load one history entry |
+
+### Example recommendation request
+
 ```bash
 curl -X POST http://localhost:8000/recommend \
   -H "Content-Type: application/json" \
-  -d '{"query": "dark psychological thriller", "top_k": 5}'
+  -d "{\"query\":\"mind-bending science fiction with emotional stakes\",\"top_k\":5}"
 ```
 
-### Example API Response
-```json
-{
-  "query_id": "1",
-  "query": "dark psychological thriller",
-  "recommendations": [
-    {
-      "rank": 1,
-      "movie_id": "318",
-      "title": "The Shawshank Redemption",
-      "year": "1994",
-      "genre": "Drama",
-      "score": 0.94,
-      "reason": "A gripping psychological drama with dark themes of injustice and resilience.",
-      "poster_url": null
-    }
-  ]
-}
+### Example signup request
+
+```bash
+curl -X POST http://localhost:8000/auth/signup \
+  -H "Content-Type: application/json" \
+  -d "{\"displayName\":\"Movie Fan\",\"username\":\"moviefan\",\"email\":\"fan@example.com\",\"password\":\"change-me\"}"
 ```
+
+Authenticated endpoints expect:
+
+```http
+Authorization: Bearer <token>
+```
+
+## Tests and Checks
+
+Backend:
+
+```bash
+pytest
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm run lint
+npm run build
+```
+
+## Deployment
+
+### Backend on Render
+
+The repository includes `Dockerfile` and `render.yaml`.
+
+1. Create a Render Blueprint or Docker web service from this repository.
+2. Set the production environment variables listed below.
+3. Deploy the `main` branch.
+4. Confirm `/health` returns `{"status":"ok"}`.
+
+Recommended Render variables:
+
+```dotenv
+APP_ENV=production
+ENABLE_OLLAMA=false
+STORAGE_BACKEND=mongodb
+MONGODB_URI=your-mongodb-connection-string
+MONGODB_DB_NAME=moviesite
+AUTH_SECRET=your-long-stable-secret
+FRONTEND_ORIGINS=https://your-project.vercel.app
+```
+
+Add Cloudinary and TMDB variables when those features are enabled. Keep `AUTH_SECRET` stable across deployments; changing it invalidates existing login tokens.
+
+### Frontend on Vercel
+
+Use these Vercel project settings:
+
+| Setting | Value |
+| --- | --- |
+| Root Directory | `frontend` |
+| Framework Preset | Vite |
+| Build Command | `npm run build` |
+| Output Directory | `dist` |
+
+Required frontend variables:
+
+```dotenv
+VITE_API_URL=https://your-render-service.onrender.com
+VITE_TMDB_API_KEY=your-tmdb-read-access-token
+```
+
+The backend CORS settings must include the final Vercel deployment origin.
+
+## Troubleshooting
+
+### Browser reports a CORS error
+
+First open the backend `/health` endpoint directly. Render `404`, `502`, or `503` responses can appear as CORS errors because they are platform responses rather than FastAPI responses.
+
+Then verify:
+
+- `VITE_API_URL` points to the correct Render service.
+- Render deployed the latest `main` commit.
+- `FRONTEND_ORIGINS` contains the exact Vercel origin.
+- The backend is listening on Render's `$PORT`.
+
+### Login works but profile redirects to login
+
+- Keep `AUTH_SECRET` stable across Render restarts and deployments.
+- Confirm `/auth/me` returns `200` with the stored token.
+- Clear stale local storage once after changing authentication secrets.
+- Deploy the latest frontend, which only clears authentication on `401` or `403`.
+
+### Render exceeds 512 MB
+
+Authentication and profile routes do not load the embedding model. The recommendation endpoint does. On a 512 MB instance, sentence-transformer and ChromaDB requests may still require a larger plan or an external embedding service.
+
+### API returns `422`
+
+FastAPI validation rejected the request. For signup, passwords must contain at least six characters and all required fields must be present.
+
+## Security Notes
+
+- Never commit `.env`, database passwords, Cloudinary secrets, or API tokens.
+- Use a long random `AUTH_SECRET` in production.
+- Restrict MongoDB network access appropriately.
+- Rotate any credential that has been exposed in screenshots, logs, or Git history.
+
+## License
+
+This project is available under the [MIT License](LICENSE).
