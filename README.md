@@ -1,6 +1,9 @@
 # Movie Man
 
-![Movie Man interface](https://github.com/user-attachments/assets/d3e41f90-23e2-4526-8f40-0b924ce84ce5)
+![Movie Man interface](https://github.com/user-attachments/assets/6ce7984a-8a82-4ff9-9ad4-512186fce36d)
+
+
+
 
 Movie Man is a full-stack movie discovery and recommendation application. It combines a React interface, FastAPI authentication and profiles, MovieLens data, ChromaDB semantic search, sentence-transformer embeddings, and optional Ollama reranking.
 
@@ -10,6 +13,13 @@ Movie Man is a full-stack movie discovery and recommendation application. It com
 [![ChromaDB](https://img.shields.io/badge/ChromaDB-vector_search-EF5B5B)](https://www.trychroma.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-profiles-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+
+## Overview:
+<img width="235" height="130" alt="mm1" src="https://github.com/user-attachments/assets/27e2e202-a4b8-4f93-9cd6-9db66ec0126d" />
+<img width="235" height="130" alt="mm22" src="https://github.com/user-attachments/assets/e9ca25e2-ea61-4dfe-83a8-ea73376119fb" />
+<img width="235" height="130" alt="mm3" src="https://github.com/user-attachments/assets/7bcbcdee-9905-4687-b10f-ef1fabe0ca3c" />
+<img width="235" height="130" alt="mm4" src="https://github.com/user-attachments/assets/e217340b-02c4-45bd-b553-c3b54a0a7444" />
+
 
 ## Features
 
