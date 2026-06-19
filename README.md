@@ -15,10 +15,10 @@ Movie Man is a full-stack movie discovery and recommendation application. It com
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 
 ## Overview:
-<img width="235" height="130" alt="mm1" src="https://github.com/user-attachments/assets/27e2e202-a4b8-4f93-9cd6-9db66ec0126d" />
-<img width="235" height="130" alt="mm22" src="https://github.com/user-attachments/assets/e9ca25e2-ea61-4dfe-83a8-ea73376119fb" />
-<img width="235" height="130" alt="mm3" src="https://github.com/user-attachments/assets/7bcbcdee-9905-4687-b10f-ef1fabe0ca3c" />
-<img width="235" height="130" alt="mm4" src="https://github.com/user-attachments/assets/e217340b-02c4-45bd-b553-c3b54a0a7444" />
+
+<p align="center">
+  <img src="docs/showcase/overview-slider.webp" alt="Animated tour of the Movie Man interface" width="960" />
+</p>
 
 
 ## Features
